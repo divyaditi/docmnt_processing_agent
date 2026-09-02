@@ -1,0 +1,11 @@
+API_KEY=""
+MODEL="openai/gpt-oss-120b"
+TEMPERATURE=0.7
+MAX_TOKENS=1024
+MAX_RETRIES=3
+TOP_P=0.9
+LLAMA_PARSE_KEY=""
+MAX_FILE_SIZE = 2 * 1024 * 1024  # 2 MB
+ALLOWED_MIME_TYPES = {"application/pdf"}
+PDF_MAGIC = b"%PDF-"
+FILES_STORAGE_PATH = "uploaded_files"  # Directory to store uploaded files
