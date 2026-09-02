@@ -1,6 +1,6 @@
 import logging
 from fastapi import APIRouter, HTTPException, File, UploadFile
-from service.chat_service import agent_chat
+from service.chat_service import process_doc
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ async def process_chat(file: UploadFile = File(...)):
     """
     
     try:
-        response = await agent_chat(file)
+        response = await process_doc(file)
         logger.info(f"File parsed successfully: {file.filename}")
         return {
             "status": "success",
