@@ -3,11 +3,11 @@ from typing import Dict, Any, TypedDict, Literal
 from client.grok_client import GroqClient
 from client.llamaparse_client import LlamaparseClient
 from langgraph.graph import StateGraph, START, END
+from constant import MAX_RETRIES
 
 # Configure logger for this module
 logger = logging.getLogger(__name__)
 
-MAX_RETRIES = 3
 
 
 class DocumentState(TypedDict):
