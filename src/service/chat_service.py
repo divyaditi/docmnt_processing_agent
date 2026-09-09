@@ -19,40 +19,36 @@ async def process_doc(file: UploadFile | str) -> dict:
         Dictionary with processing result including summary, approval status, and retries
     """
     try:
-        # Validate file type
-        if file.content_type not in ALLOWED_MIME_TYPES:
-            raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+        logger.info(f"VALIDATION PHASE - Validating file: {file.filename}")
         
-        # Read file content
+        # Read file content first to validate with magic bytes
         content = await file.read()
-        logger.debug(f"File read successfully: {len(content)} bytes")
         
-        # Validate PDF magic bytes
+        # Validate PDF magic bytes (most reliable method)
         header = content[:5]
         if len(header) < 5 or header != PDF_MAGIC:
+            logger.error(f"Invalid PDF magic bytes: {header} (expected: {PDF_MAGIC})")
             raise HTTPException(status_code=400, detail="File is not a valid PDF")
-        logger.info("PDF magic bytes validation passed")
     
         # Validate file size
         if len(content) > MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail=f"File must be <= {MAX_FILE_SIZE / (1024*1024):.1f} MB")
-        logger.info(f"File size validation passed: {len(content)} bytes")
-        
+            max_mb = MAX_FILE_SIZE / (1024*1024)
+            logger.error(f" File size exceeds limit: {len(content)} bytes > {MAX_FILE_SIZE} bytes ({max_mb:.1f} MB)")
+            raise HTTPException(status_code=400, detail=f"File must be <= {max_mb:.1f} MB")
+        logger.info(f"✓ File size validation passed: {len(content)} bytes ({len(content) / (1024*1024):.2f} MB)") 
+       
         # Save file to storage
         stored_file_path = file_storage_manager.save_file(content, file.filename)
-        logger.info(f"File stored at: {stored_file_path}")
+        logger.info(f"✓ File stored successfully at: {stored_file_path}")
 
-        # Initialize the document agent
-        logger.info("Initializing DocumentAgent for workflow")
         agent = DocumentAgent()
         
-        # Build the workflow graph
         workflow = agent.build_graph()
-        logger.info("Workflow graph built successfully")
+        logger.debug("✓ Workflow graph compiled successfully")
         
         # Create initial state with stored file path
         initial_state: DocumentState = {
-            "file_path": stored_file_path,  # Use the stored file path
+            "file_path": stored_file_path,
             "markdown_content": "",
             "summarized_text": "",
             "user_feedback": "",
@@ -60,12 +56,8 @@ async def process_doc(file: UploadFile | str) -> dict:
             "approved": False,
             "status": ""
         }
-        logger.debug(f"Initial state created: file_path={stored_file_path}")
-        
-        # Invoke the workflow asynchronously using ainvoke
-        logger.info("Starting workflow invocation")
+
         final_state = await workflow.ainvoke(initial_state)
-        logger.info(f"Workflow completed with status: {final_state.get('status')}")
         
         # Return the result
         return {
@@ -83,5 +75,5 @@ async def process_doc(file: UploadFile | str) -> dict:
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error processing document: {str(e)}", exc_info=True)
+        logger.error(str(e), exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

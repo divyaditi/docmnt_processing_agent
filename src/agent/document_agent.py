@@ -54,21 +54,15 @@ class DocumentAgent:
             user_input = user_input.strip().lower()
             
             if user_input in ['y', 'yes']:
-                logger.info("✅ User satisfied with summary")
                 return True
             elif user_input in ['n', 'no']:
-                logger.info("❌ User NOT satisfied - will retry")
                 return False
             else:
-                print("❌ Invalid input. Please enter 'y' (yes) or 'n' (no)")
+                print("Invalid input. Please enter 'y' (yes) or 'n' (no)")
     
     def _display_summary(self, summary: str) -> None:
         """Display summary to user"""
-        print("\n" + "="*70)
-        print("SUMMARY GENERATED")
-        print("="*70 + "\n")
         print(summary)
-        print("\n" + "="*70 + "\n")
     
     async def parse_document(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -199,10 +193,10 @@ class DocumentAgent:
             
             if is_approved:
                 state["status"] = "approved"
-                logger.info(f"✅ Summary approved after {current_attempt} attempt(s)")
+                logger.info(f"Summary approved after {current_attempt} attempt(s)")
             else:
                 state["status"] = "rejected"
-                logger.info(f"❌ Summary rejected - may retry if attempts < {MAX_RETRIES}")
+                logger.info(f"Summary rejected - may retry if attempts < {MAX_RETRIES}")
             
             return state
             
@@ -233,17 +227,15 @@ class DocumentAgent:
         
         # If approved, go to end
         if state.get("approved"):
-            logger.info("✅ Proceeding to END (summary approved)")
+            logger.info("Proceeding to END (summary approved)")
             return "end"
         
         # If rejected and can retry, go back to summarize
         if current_status == "rejected" and current_retries < MAX_RETRIES:
-            logger.info(f"🔄 Looping back to SUMMARIZE (attempt {current_retries + 1})")
-            print("\n⏳ Retrying summarization...\n")
-            return "summarize"
+            logger.info(f"Looping back to SUMMARIZE (attempt {current_retries + 1})")
         
         # Otherwise end (either error or max retries reached)
-        logger.info("⏹️  Proceeding to END (no more retries or error)")
+        logger.info(" Proceeding to END (no more retries or error)")
         return "end"
     
     def build_graph(self):
@@ -275,12 +267,6 @@ class DocumentAgent:
                     "end": END                  # Exit to END
                 }
             )
-            
-            logger.info("✅ Dynamic loop workflow built successfully")
-            logger.info("   Flow: START → parse → summarize → approval → [DECISION]")
-            logger.info("   Decision: Approved OR max_retries? → END")
-            logger.info("   Decision: Not approved AND retries < 3? → loop to summarize")
-            
             return graph.compile()
             
         except Exception as e:
